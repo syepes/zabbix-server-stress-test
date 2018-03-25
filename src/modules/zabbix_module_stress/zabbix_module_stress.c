@@ -19,6 +19,7 @@
 
 #include "sysinc.h"
 #include "module.h"
+#include "common.h"
 
 /* the variable keeps timeout setting for item processing */
 static int	item_timeout = 0;
@@ -26,13 +27,22 @@ static int	item_timeout = 0;
 int	zbx_module_stress_ping(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	zbx_module_stress_echo(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	zbx_module_stress_random(AGENT_REQUEST *request, AGENT_RESULT *result);
+int	zbx_module_stress_random_int(AGENT_REQUEST *request, AGENT_RESULT *result);
+int	zbx_module_stress_random_double(AGENT_REQUEST *request, AGENT_RESULT *result);
+int	zbx_module_stress_random_str(AGENT_REQUEST *request, AGENT_RESULT *result);
+int	zbx_module_stress_random_txt(AGENT_REQUEST *request, AGENT_RESULT *result);
+void	rand_str(char *dest, size_t length);
 
 static ZBX_METRIC keys[] =
 /*      KEY                     FLAG		FUNCTION        	TEST PARAMETERS */
 {
 	{"stress.ping",		CF_HAVEPARAMS,	zbx_module_stress_ping,	"anything"},
 	{"stress.echo",		CF_HAVEPARAMS,	zbx_module_stress_echo, 	"a message"},
-	{"stress.random",	CF_HAVEPARAMS,	zbx_module_stress_random,"1,1000"},    
+	{"stress.random",	CF_HAVEPARAMS,	zbx_module_stress_random,"1,1000"},
+	{"stress.random.int",	CF_HAVEPARAMS,	zbx_module_stress_random_int,"anything"},
+	{"stress.random.double",	CF_HAVEPARAMS,	zbx_module_stress_random_double,"anything"},
+	{"stress.random.str",	CF_HAVEPARAMS,	zbx_module_stress_random_str,"anything"},
+	{"stress.random.txt",	CF_HAVEPARAMS,	zbx_module_stress_random_txt,"anything"},
 	{NULL}
 };
 
@@ -158,6 +168,53 @@ int	zbx_module_stress_random(AGENT_REQUEST *request, AGENT_RESULT *result)
 	return SYSINFO_RET_OK;
 }
 
+// Random Numetric (unsigned)
+int	zbx_module_stress_random_int(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+	int	from, to;
+	from = 0;
+	to = 2000;
+
+	SET_UI64_RESULT(result, from + rand() % (to - from + 1));
+
+	return SYSINFO_RET_OK;
+}
+
+// Random Numetric (float)
+int	zbx_module_stress_random_double(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+	double	from, to;
+	from = 1.0;
+	to = 2000.0;
+
+	SET_DBL_RESULT(result, from + rand() / (to - from + 1));
+
+	return SYSINFO_RET_OK;
+}
+
+// Random Character
+int	zbx_module_stress_random_str(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+	char str[250];
+	rand_str(str, sizeof str - 1);
+
+	SET_STR_RESULT(result, zbx_dsprintf(NULL, "STR: %s", str)); // Max length 255
+
+	return SYSINFO_RET_OK;
+}
+
+// Random Text
+int	zbx_module_stress_random_txt(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+	char str[507];
+	rand_str(str, sizeof str - 1);
+
+	SET_TEXT_RESULT(result, zbx_dsprintf(NULL, "TXT: %s", str)); // Max length DB Dependent
+
+	return SYSINFO_RET_OK;
+}
+
+
 /******************************************************************************
  *                                                                            *
  * Function: zbx_module_init                                                  *
@@ -175,7 +232,7 @@ int	zbx_module_init()
 {
 	/* initialization for stress.random */
 	srand(time(NULL));
-    
+
 	return ZBX_MODULE_OK;
 }
 
@@ -193,4 +250,17 @@ int	zbx_module_init()
 int	zbx_module_uninit()
 {
 	return ZBX_MODULE_OK;
+}
+
+// Generate random strings
+void rand_str(char *dest, size_t length) {
+	char charset[] = "0123456789"
+	"abcdefghijklmnopqrstuvwxyz"
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+	while (length-- > 0) {
+		size_t index = (double) rand() / RAND_MAX * (sizeof charset - 1);
+		*dest++ = charset[index];
+	}
+	*dest = '\0';
 }
