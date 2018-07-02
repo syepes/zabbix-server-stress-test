@@ -198,7 +198,7 @@ int	zbx_module_stress_random_str(AGENT_REQUEST *request, AGENT_RESULT *result)
 	char str[250];
 	rand_str(str, sizeof str - 1);
 
-	SET_STR_RESULT(result, zbx_dsprintf(NULL, "STR: %s", str)); // Max length 255
+	SET_STR_RESULT(result, strdup(str)); // Max length 255
 
 	return SYSINFO_RET_OK;
 }
@@ -209,7 +209,7 @@ int	zbx_module_stress_random_txt(AGENT_REQUEST *request, AGENT_RESULT *result)
 	char str[507];
 	rand_str(str, sizeof str - 1);
 
-	SET_TEXT_RESULT(result, zbx_dsprintf(NULL, "TXT: %s", str)); // Max length DB Dependent
+	SET_TEXT_RESULT(result, strdup(str)); // Max length DB Dependent
 
 	return SYSINFO_RET_OK;
 }
