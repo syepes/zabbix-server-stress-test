@@ -26,6 +26,7 @@ static int	item_timeout = 0;
 
 int	zbx_module_stress_ping(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	zbx_module_stress_echo(AGENT_REQUEST *request, AGENT_RESULT *result);
+int	zbx_module_stress_file(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	zbx_module_stress_random(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	zbx_module_stress_random_int(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	zbx_module_stress_random_double(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -36,8 +37,9 @@ void	rand_str(char *dest, size_t length);
 static ZBX_METRIC keys[] =
 /*      KEY                     FLAG		FUNCTION        	TEST PARAMETERS */
 {
-	{"stress.ping",		CF_HAVEPARAMS,	zbx_module_stress_ping,	"anything"},
-	{"stress.echo",		CF_HAVEPARAMS,	zbx_module_stress_echo, 	"a message"},
+	{"stress.ping",		CF_HAVEPARAMS,	zbx_module_stress_ping,"anything"},
+	{"stress.echo",		CF_HAVEPARAMS,	zbx_module_stress_echo,"a message"},
+	{"stress.file",		CF_HAVEPARAMS,	zbx_module_stress_file,"anything"},
 	{"stress.random",	CF_HAVEPARAMS,	zbx_module_stress_random,"1,1000"},
 	{"stress.random.int",	CF_HAVEPARAMS,	zbx_module_stress_random_int,"anything"},
 	{"stress.random.double",	CF_HAVEPARAMS,	zbx_module_stress_random_double,"anything"},
@@ -110,6 +112,20 @@ int	zbx_module_stress_echo(AGENT_REQUEST *request, AGENT_RESULT *result)
 	param = get_rparam(request, 0);
 
 	SET_STR_RESULT(result, strdup(param));
+
+	return SYSINFO_RET_OK;
+}
+
+// Checks if file "/tmp/stress_file" exists (unsigned)
+int	zbx_module_stress_file(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+	zbx_stat_t	buf;
+
+	if (0 != zbx_stat("/tmp/stress_file", &buf)) {
+		SET_UI64_RESULT(result, 0);
+	} else {
+		SET_UI64_RESULT(result, 1);
+	}
 
 	return SYSINFO_RET_OK;
 }
